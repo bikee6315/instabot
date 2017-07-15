@@ -5,7 +5,9 @@ from textblob import TextBlob
 APP_ACCESS_TOKEN = '2171493643.ae2709c.f2266fcdceae49418188a27908541a11'
 BASE_URL = 'https://api.instagram.com/v1/'
 
-
+calamities = ['flood', 'earthquake', 'tsunami', 'landslide', 'soil erosion', 'avalanche', 'cyclones', 'hurricane',
+              'thunderstorm', 'drought']
+locationid=[]
 
 def self_info():
     request_url = (BASE_URL + 'users/self/?access_token=%s') % (APP_ACCESS_TOKEN)
@@ -87,7 +89,7 @@ def get_own_post():
 
 
 
-def get_users_post(insta_username):
+def get_calamities_post(insta_username):
     user_id=get_user_id(insta_username)
     if user_id==None:
         print "User doesn\'t exist"
@@ -98,15 +100,15 @@ def get_users_post(insta_username):
 
     if user_media['meta']['code']==200:
         if len(user_media['data']):
-            image_name = user_media['data'][0]['id'] + '.jpeg'
-            print image_name
-            image_url = user_media['data'][0]['images']['standard_resolution']['url']
-            print image_url
-            urllib.urlretrieve(image_url, image_name)
-            print 'Your post has been downloaded'
-            import webbrowser
-            webbrowser.open(image_name)
-            return own_media['data'][0]['id']
+            i=0
+            rang=len(user_media['data'])
+            for i in range(rang):
+                for temp in calamities:
+                    if temp in user_media['data'][i]['tags']:
+                        if user_media['data'][i]['location']!=None:
+                            id=user_media['data'][i]['location']['id']
+                            locationid.append(id)
+
         else:
             print "Post doesn\'t exist"
             return None
@@ -114,19 +116,25 @@ def get_users_post(insta_username):
         print 'Status code other than 200 received'
 
 
-
-def get_post_id(insta_username):
-    user_id=get_user_id(insta_username)
-    if user_id==None:
-        print "User doesn\'t exists"
+def get_users_post(insta_username):
+    user_id = get_user_id(insta_username)
+    if user_id == None:
+        print "User doesn\'t exist"
         exit()
-    request_url=(BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
-    print 'GET request url : %s' %(request_url)
-    user_media=requests.get(request_url).json()
-
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
     if user_media['meta']['code']==200:
         if len(user_media['data']):
-            return user_media['data'][0]['id']
+             image_name = user_media['data'][0]['id'] + '.jpeg'
+             print image_name
+             image_url = user_media['data'][0]['images']['standard_resolution']['url']
+             print image_url
+             urllib.urlretrieve(image_url, image_name)
+             print 'Your post has been downloaded'
+             import webbrowser
+             webbrowser.open(image_name)
+             return user_media['data'][0]['id']
         else:
             print 'There is no recent post of user'
             exit()
@@ -190,65 +198,19 @@ def get_comments(insta_username):
 
 
 
-def get_location(lat,lng):
-    request_url=(BASE_URL + 'locations/search?lat=%s&lng=%s&access_token=%s') %(lat,lng,APP_ACCESS_TOKEN)
-    print 'GET reques url: %s' %(request_url)
-    user_location=requests.get(request_url).json()
-    print user_location
-    if user_location['meta']['code']==200:
-        if len(user_location['data']):
-            return user_location['data'][0]['id']
+def get_location():
+    for temp_id in locationid:
+      next_url = (BASE_URL + 'locations/%s/media/recent?access_token=%s') % (temp_id, APP_ACCESS_TOKEN)
+      print 'url is ',next_url
+      loc_media=requests.get(next_url).json()
+      if loc_media['meta']['code']==200:
+        if len(loc_media['data']):
+            print loc_media['data'][0]['location']['name']
+            print loc_media['data'][0]['images']['standard_resolution']['url']
         else:
-            print 'No location found'
-            return None
-    else:
-        print 'Status code other than 200 received'
-        exit()
-
-
-
-def get_tags(tag_name):
-    request_url = (BASE_URL + 'tags/search?q=%s&access_token=%s') % (tag_name, APP_ACCESS_TOKEN)
-    print 'GET request url: %s' % (request_url)
-    associated_tag = requests.get(request_url).json()
-    print associated_tag
-    if associated_tag['meta']['code']==200:
-        if len(associated_tag['data']):
-            return associated_tag['data']
-        else:
-            print'No tags found'
-            return None
-    else:
-        print 'Status code other than 200 is received'
-        exit()
-
-
-
-def get_tag_media(tag_name):
-    if tag_name==None:
-        print "No image exist"
-        exit()
-    request_url = (BASE_URL + 'tags/%s/media/recent?access_token=%s') % (tag_name,APP_ACCESS_TOKEN)
-    print 'GET request url : %s' % (request_url)
-    tag_media = requests.get(request_url).json()
-
-    if tag_media['meta']['code']==200:
-        if len(tag_media['data']):
-            image_name = tag_media['data'][0]['id'] + '.jpeg'
-            print image_name
-            image_url = tag_media['data'][0]['images']['standard_resolution']['url']
-            print image_url
-            urllib.urlretrieve(image_url, image_name)
-            print 'Your post has been downloaded'
-            import webbrowser
-            webbrowser.open(image_name)
-            return tag_media['data'][0]['id']
-        else:
-            print "Post doesn\'t exist"
-            return None
-    else:
-        print 'Status code other than 200 received'
-
+            print 'No media'
+      else:
+         print 'Status code other than 200 received'
 
 
 def self_liked_media():
@@ -281,6 +243,7 @@ def self_liked_media():
 
 def start_bot():
     print 'HEY! WELCOME TO INSTABOT'
+    print locationid
     while True:
         try:
             print '\nMENU OPTIONS:'
@@ -309,38 +272,23 @@ def start_bot():
                 if choice2==1:
                    insta_username = raw_input("USERNAME:")
                    get_user_info(insta_username)
-                elif choice==2:
+                elif choice2==2:
                    insta_username = raw_input("USERNAME:")
                    get_users_post(insta_username)
-                elif choice==3:
+                elif choice2==3:
                    insta_username = raw_input("USERNAME:")
                    like_a_post(insta_username)
-                elif choice==4:
+                elif choice2==4:
                    insta_username = raw_input("USERNAME:")
                    post_a_comment(insta_username)
-                elif choice==5:
+                elif choice2==5:
                    insta_username = raw_input("USERNAME:")
                    get_comments(insta_username)
-                elif choice==6:
-                   lat=float(raw_input("Enter the latitude:"))
-                   lng=float(raw_input("Enter the longitude"))
-                   get_location(lat,lng)
-                   print 'Tag names are:'
-                   print '\ta.FLOOD\n\tb.EARTHQUAKE\n\tc.LANDSLIDE'
-                   tag_name=raw_input("Enter the name of tag")
-                   if tag_name=='flood' or tag_name=='a':
-                     get_tags(tag_name)
-                     get_tag_media(tag_name)
-                   elif tag_name=='earthquake' or tag_name=='b':
-                     get_tags(tag_name)
-                     get_tag_media(tag_name)
-                   elif tag_name=='landslide' or tag_name=='c':
-                     get_tags(tag_name)
-                     get_tag_media(tag_name)
-                   else:
-                     print 'Wrong input'
-                else:
-                    print 'INVALID ENTRY'
+                elif choice2==6:
+                   insta_username = raw_input("USERNAME:")
+                   get_calamities_post(insta_username)
+                   get_location()
+
             elif choice=='f':
                 print '\n\t*****HAVE A GOOD DAY******'
                 exit()
