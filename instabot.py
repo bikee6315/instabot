@@ -7,7 +7,6 @@ from textblob import TextBlob
 #SANDBOX USERS: sntk97, tourism._nepal, insta_bot1996
 
 
-APP_ACCESS_TOKEN = '2171493643.ae2709c.f2266fcdceae49418188a27908541a11'
 BASE_URL = 'https://api.instagram.com/v1/'
 
 calamities = ['flood', 'earthquake', 'tsunami', 'landslide', 'soil erosion', 'avalanche', 'cyclones', 'hurricane',
