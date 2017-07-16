@@ -4,9 +4,11 @@ import requests                            #importing request module
 import urllib                              #importing urllib module
 from textblob import TextBlob
 
-#SANDBOX USERS: sntk97, tourism._nepal, insta_bot1996
+#SANDBOX USERS: sntk97, tourism._nepal, insta_bot1996,inta1996
+#LATITUDE=28.6129
+#LONGITUDE=77.2295
 
-
+APP_ACCESS_TOKEN = '2171493643.ae2709c.f2266fcdceae49418188a27908541a11'
 BASE_URL = 'https://api.instagram.com/v1/'
 
 calamities = ['flood', 'earthquake', 'tsunami', 'landslide', 'soil erosion', 'avalanche', 'cyclones', 'hurricane',
@@ -131,33 +133,6 @@ def get_users_post(insta_username):
         print 'Status code other than 200 received'
         exit()
 
-# Function declaration to analyse the tags of post related to natural calamities
-
-def get_calamities_post(insta_username):
-    user_id=get_user_id(insta_username)
-    if user_id==None:
-        print "User doesn\'t exist"
-        exit()
-    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id,APP_ACCESS_TOKEN)
-    print 'GET request url : %s' % (request_url)
-    user_media = requests.get(request_url).json()
-
-    if user_media['meta']['code']==200:
-        if len(user_media['data']):
-            i=0
-            rang=len(user_media['data'])
-            for i in range(rang):
-                for temp in calamities:                    #Comparing tags of post with list calamities
-                    if user_media['data'][i]['location']!=None:
-                            id=user_media['data'][i]['location']['id']
-                            locationid.append(id)
-
-        else:
-            print "Post doesn\'t exist"
-            return None
-    else:
-        print 'Status code other than 200 received'
-
 # Function declaration to get ID of post uploaded by user using username
 
 def get_post_id(insta_username):
@@ -233,20 +208,26 @@ def get_comments(insta_username):
         exit()
 
 # Function declaration to get the location where natural calamities has occured
-
-def get_location():
-    for temp_id in locationid:
-      next_url = (BASE_URL + 'locations/%s/media/recent?access_token=%s') % (temp_id, APP_ACCESS_TOKEN)
-      print 'url is ',next_url
-      loc_media=requests.get(next_url).json()              # Fetching loction from the media
-      if loc_media['meta']['code']==200:
-        if len(loc_media['data']):
-            print 'LOCATION:%s' % (loc_media['data'][0]['location']['name'])           # Printing the location
-            print loc_media['data'][0]['images']['standard_resolution']['url']         # Printing location media
+def get_natural_calamities(lat,lng):
+    request_url = (BASE_URL + 'media/search?lat=%s&lng=%s&distance=500&access_token=%s') % (lat, lng, APP_ACCESS_TOKEN)
+    print 'GET reques url: %s' % (request_url)
+    user_location = requests.get(request_url).json()
+    print user_location
+    if user_location['meta']['code'] == 200:
+        if len(user_location['data']):
+            image=user_location['data'][0]['images']['standard_resolution']['url']
+            print image
+            for temp in calamities:
+                if user_location['data'][0]['tags']==temp:
+                 print user_location['data'][0]['tags']
+                 print user_location['data'][0]['location']
+            print 'Tags are:%s' % (user_location['data'][0]['tags'])
+            print 'Location is:%s' % (user_location['data'][0]['location'])
+            print '%s is going on at %s' %(user_location['data'][0]['tags'],user_location['data'][0]['location'])
         else:
-            print 'No media'
-      else:
-         print 'Status code other than 200 received'
+            print'media not found'
+    else:
+        print 'Status code other than 200 received'
 
 # Function declalration to get the post liked by own
 
@@ -314,10 +295,9 @@ def start_bot():
                    insta_username = raw_input("USERNAME:")
                    get_comments(insta_username)
                 elif choice2==6:
-                   insta_username = raw_input("USERNAME:")
-                   get_calamities_post(insta_username)
-                   get_location()
-
+                   lat=float(raw_input("Enter the latitude:"))
+                   lng=float(raw_input("Enter the longitude"))
+                   get_natural_calamities(lat,lng)
             elif choice=='f':
                 print '\n\t*****HAVE A GOOD DAY******'
                 exit()
