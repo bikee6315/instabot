@@ -1,10 +1,13 @@
-import requests
-import urllib
+##************ INSTABOT ***********##
+
+import requests                            #importing request module
+import urllib                              #importing urllib module
 from textblob import TextBlob
 
 #SANDBOX USERS: sntk97, tourism._nepal, insta_bot1996
 
 
+APP_ACCESS_TOKEN = '2171493643.ae2709c.f2266fcdceae49418188a27908541a11'
 BASE_URL = 'https://api.instagram.com/v1/'
 
 calamities = ['flood', 'earthquake', 'tsunami', 'landslide', 'soil erosion', 'avalanche', 'cyclones', 'hurricane',
@@ -20,12 +23,15 @@ def self_info():
 
     if user_info['meta']['code']==200:
         if len(user_info['data']):
+
+# Printing the data of own
+
             print 'Username:%s' %(user_info['data']['username'])
             print 'Number of followers:%s' %(user_info['data']['counts']['followed_by'])
             print 'Number of people you are following:%s' %(user_info['data']['counts']['follows'])
             print 'Number of posts:%s' %(user_info['data']['counts']['media'])
         else:
-            print "User doesn\'t exist"
+            print "User doesn\'t exist"                   # Printing message if user doesn't exist
     else:
         print 'Status code other than 200 received'
 
@@ -34,7 +40,7 @@ def self_info():
 def get_user_id(insta_username):
     request_url = (BASE_URL + 'users/search?q=%s&access_token=%s') % (insta_username,APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
-    user_info = requests.get(request_url).json()
+    user_info = requests.get(request_url).json()          # Getting information of user in json form
 
     if user_info['meta']['code']==200:
         if len(user_info['data']):
@@ -57,7 +63,7 @@ def get_user_info(insta_username):
         exit()
     request_url = (BASE_URL + 'users/%s?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
     print 'GET request url : %s' % (request_url)
-    user_info = requests.get(request_url).json()
+    user_info = requests.get(request_url).json()       # Requesting json response
 
     if user_info['meta']['code']==200:
         if len(user_info['data']):
@@ -80,15 +86,15 @@ def get_own_post():
     if own_media['meta']['code']==200:
         if len(own_media['data']):
             image_name=own_media['data'][0]['id']+ '.jpeg'
-            print 'IMAGE NAME:%s' %(image_name)
+            print 'IMAGE NAME:%s' %(image_name)                       # Display image name
             image_url=own_media['data'][0]['images']['standard_resolution']['url']
-            print 'IMAGE URL:%s' %(image_url)
+            print 'IMAGE URL:%s' %(image_url)                          # Display image url
             urllib.urlretrieve(image_url, image_name)
             print 'Your post has been downloaded'
-            print 'Post id is:'
+            print 'Post id is:'                                        # Printing post id
             print own_media['data'][0]['id']
             import webbrowser
-            webbrowser.open(image_name)
+            webbrowser.open(image_name)                              # Display image on browser
             return own_media['data'][0]['id']
         else:
             print "Post doesn\'t exist"
@@ -109,15 +115,15 @@ def get_users_post(insta_username):
     if user_media['meta']['code']==200:
         if len(user_media['data']):
              image_name = user_media['data'][0]['id'] + '.jpeg'
-             print 'IMAGE NAME:%s' %(image_name)
+             print 'IMAGE NAME:%s' %(image_name)                     # Display image name
              image_url = user_media['data'][0]['images']['standard_resolution']['url']
-             print 'IMAGE URL:%s' %(image_url)
+             print 'IMAGE URL:%s' %(image_url)                       # Display image url
              urllib.urlretrieve(image_url, image_name)
-             print 'Post id is:'
+             print 'Post id is:'                                     # Display post id
              print user_media['data'][0]['id']
              print 'Your post has been downloaded'
              import webbrowser
-             webbrowser.open(image_name)
+             webbrowser.open(image_name)                             # Display image on browser
              return user_media['data'][0]['id']
         else:
             print 'There is no recent post of user'
@@ -142,9 +148,8 @@ def get_calamities_post(insta_username):
             i=0
             rang=len(user_media['data'])
             for i in range(rang):
-                for temp in calamities:
-                    if temp in user_media['data'][i]['tags']:
-                        if user_media['data'][i]['location']!=None:
+                for temp in calamities:                    #Comparing tags of post with list calamities
+                    if user_media['data'][i]['location']!=None:
                             id=user_media['data'][i]['location']['id']
                             locationid.append(id)
 
@@ -182,7 +187,7 @@ def like_a_post(insta_username):
     request_url = (BASE_URL + 'media/%s/likes') % (media_id)
     payload = {"access_token": APP_ACCESS_TOKEN}
     print 'POST request url : %s' % (request_url)
-    post_a_like = requests.post(request_url, payload).json()
+    post_a_like = requests.post(request_url, payload).json()                    # Posting a like on a post
     if post_a_like['meta']['code']==200:
         print 'Your like was successful'
     else:
@@ -196,7 +201,7 @@ def post_a_comment(insta_username):
     payload = {"access_token": APP_ACCESS_TOKEN, "text": comment_text}
     request_url = (BASE_URL + 'media/%s/comments') % (media_id)
     print 'POST request url : %s' % (request_url)
-    make_comment = requests.post(request_url, payload).json()
+    make_comment = requests.post(request_url, payload).json()                  #Commenting on a post through url
     if make_comment['meta']['code']==200:
         print'Comment was successfully added'
     else:
@@ -218,7 +223,7 @@ def get_comments(insta_username):
             print 'Comments Are:'
             position=1
             for text in user_media['data']:
-                print'\t%s. from %s: %s' %(position,text['from']['username'],text['text'])
+                print'\t%s. from %s: %s' %(position,text['from']['username'],text['text'])          # Printing list of comments of a post
                 position=position+1
         else:
             print'No comments found'
@@ -234,11 +239,11 @@ def get_location():
     for temp_id in locationid:
       next_url = (BASE_URL + 'locations/%s/media/recent?access_token=%s') % (temp_id, APP_ACCESS_TOKEN)
       print 'url is ',next_url
-      loc_media=requests.get(next_url).json()
+      loc_media=requests.get(next_url).json()              # Fetching loction from the media
       if loc_media['meta']['code']==200:
         if len(loc_media['data']):
-            print 'LOCATION:%s' % (loc_media['data'][0]['location']['name'])
-            print loc_media['data'][0]['images']['standard_resolution']['url']
+            print 'LOCATION:%s' % (loc_media['data'][0]['location']['name'])           # Printing the location
+            print loc_media['data'][0]['images']['standard_resolution']['url']         # Printing location media
         else:
             print 'No media'
       else:
@@ -256,7 +261,7 @@ def self_liked_media():
             rang=len(liked_media['data'])
             i=0
             for i in range(rang):
-                print liked_media['data'][i]['images']['standard_resolution']['url']
+                print liked_media['data'][i]['images']['standard_resolution']['url']         # Printing the post liked by own
         else:
             print "Post doesn\'t exist"
             return None
